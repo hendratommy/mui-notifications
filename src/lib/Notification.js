@@ -83,7 +83,7 @@ const styles = theme => ({
   }
 });
 
-class Notification extends React.Component {
+class Notification extends React.PureComponent {
   componentWillMount() {
     if (this.props.timeout) {
       this.autoHideTimeout = setTimeout(() => {

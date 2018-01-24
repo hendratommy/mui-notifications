@@ -1,11 +1,20 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import immutable from 'immutable';
 import { withStyles } from 'material-ui/styles';
+import { connect } from 'react-redux';
+import compose from 'recompose/compose';
+import { Provider } from 'react-redux';
+import configureStore from './redux/store';
 import Notification from './Notification';
+import {
+  SHOW_NOTIFICATION,
+  REMOVE_NOTIFICATION,
+  HIDE_NOTIFICATION,
+  SET_MAX_NOTIFICATIONS
+} from './redux/reducer';
 
-let notifications = [],
-  count = 0,
-  maxNotifications;
+export const store = configureStore();
 
 const styles = theme => ({
   root: {
@@ -17,76 +26,23 @@ const styles = theme => ({
   }
 });
 
-class NotificationProvider extends Component {
+class NotificationProvider extends React.Component {
   componentWillMount() {
-    notifications = [];
-    maxNotifications = this.props.maxNotifications;
+    setMaxNotifications(this.props.maxNotifications);
   }
-
-  static showNotification = notification => {
-    let tempNotifications = notifications;
-    notification.id = count;
-    notification.open = true;
-
-    tempNotifications.push(notification);
-    tempNotifications = tempNotifications.filter(
-      NotificationProvider.filterOpen
-    );
-    notifications = NotificationProvider.shuffleNotifications(
-      tempNotifications
-    );
-    count++;
-  };
-
-  static filterOpen = notification => notification.open;
-
-  static shuffleNotifications = tempNotifications => {
-    if (tempNotifications.length > maxNotifications) {
-      for (let i in tempNotifications) {
-        if (
-          typeof tempNotifications[i] === 'object' &&
-          (!tempNotifications[i].hasOwnProperty('priority') ||
-            !tempNotifications[i].priority)
-        ) {
-          tempNotifications.splice(i, 1);
-          if (tempNotifications.length === maxNotifications) {
-            break;
-          }
-        }
-      }
-    }
-
-    tempNotifications.sort(function(a, b) {
-      const priorityA = a.priority,
-        priorityB = b.priority;
-      if (!priorityA && priorityB) {
-        return 1;
-      } else if (priorityA && !priorityB) {
-        return -1;
-      }
-
-      return 0;
-    });
-    return tempNotifications;
-  };
-
   onCloseNotification = index => {
-    notifications.splice(index, 1);
-    this.forceUpdate();
+    removeNotification(index);
   };
 
   onNotificationTimeout = index => {
-    const notification = notifications[index];
-    notification.open = false;
-    this.forceUpdate();
+    hideNotification(index);
     setTimeout(() => {
       this.onCloseNotification(index);
-      this.forceUpdate();
     }, 300);
   };
 
   render() {
-    const { classes } = this.props;
+    const { classes, notifications } = this.props;
     return (
       <div className={classes.root}>
         {notifications.map((props, index) => {
@@ -110,10 +66,62 @@ class NotificationProvider extends Component {
 }
 
 NotificationProvider.propTypes = {
-  desktop: PropTypes.bool,
-  maxNotifications: PropTypes.number
+  maxNotifications: PropTypes.number,
+  notifications: PropTypes.instanceOf(immutable.List).isRequired
 };
-NotificationProvider.defaultProps = {
-  maxNotifications: 5
+
+function mapStateToProps(state) {
+  return {
+    maxNotifications: state.muiNotifications.get('maxNotifications'),
+    notifications: state.muiNotifications.get('notifications')
+  };
+}
+
+function mergeProps(stateProps, dispatchProps, ownProps) {
+  if (
+    ownProps.maxNotifications &&
+    stateProps.maxNotifications !== ownProps.maxNotifications
+  )
+    return {
+      ...stateProps,
+      ...dispatchProps,
+      maxNotifications: ownProps.maxNotifications
+    };
+  return {
+    ...stateProps,
+    ...dispatchProps
+  };
+}
+
+export default class ComponentWrapper extends React.Component {
+  render() {
+    const WrappedComponent = compose(
+      connect(mapStateToProps, {}, mergeProps),
+      withStyles(styles)
+    )(NotificationProvider);
+    return (
+      <Provider store={store}>
+        <WrappedComponent {...this.props} />
+      </Provider>
+    );
+  }
+}
+
+export const setMaxNotifications = maxNotifications => {
+  return store.dispatch({
+    type: SET_MAX_NOTIFICATIONS,
+    payload: { maxNotifications }
+  });
 };
-export default withStyles(styles)(NotificationProvider);
+
+export const showNotification = notification => {
+  return store.dispatch({ type: SHOW_NOTIFICATION, payload: { notification } });
+};
+
+const hideNotification = index => {
+  return store.dispatch({ type: HIDE_NOTIFICATION, payload: { index } });
+};
+
+export const removeNotification = index => {
+  return store.dispatch({ type: REMOVE_NOTIFICATION, payload: { index } });
+};
