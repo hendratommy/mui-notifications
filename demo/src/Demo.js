@@ -14,13 +14,21 @@ import Typography from 'material-ui/Typography/Typography';
 import moment from 'moment';
 import IconButton from 'material-ui/IconButton';
 import Paper from 'material-ui/Paper';
-import { grey } from 'material-ui/colors';
+import { grey, green, yellow, red } from 'material-ui/colors';
 import classNames from 'classnames';
-import { Notification, NotificationProvider } from 'mui-notifications';
+import {
+  Notification,
+  NotificationProvider,
+  showNotification,
+  removeNotification
+} from 'mui-notifications';
 
 import Github from './icons/Github';
 import AvatarImg from './images/grumpy.jpg';
 import Divider from 'material-ui/Divider';
+import InfoIcon from 'material-ui-icons/Info';
+import WarningIcon from './icons/WarningOutline';
+import ErrorIcon from './icons/ErrorOutline';
 
 const styles = theme => ({
   root: {
@@ -56,6 +64,15 @@ const styles = theme => ({
   avatar: {
     backgroundColor: theme.palette.primary.main
   },
+  avatarInfo: {
+    backgroundColor: green[500]
+  },
+  avatarWarning: {
+    backgroundColor: yellow[500]
+  },
+  avatarError: {
+    backgroundColor: red[500]
+  },
   button: {
     margin: theme.spacing.unit
   },
@@ -65,72 +82,93 @@ const styles = theme => ({
   sample: {
     backgroundColor: grey[100],
     padding: theme.spacing.unit
+  },
+  expandedButton: {
+    margin: `${theme.spacing.unit}px 0px 0px ${theme.spacing.unit}px`
+  },
+  expandedButtonContainer: {
+    '& :last-child': {
+      display: 'flex',
+      justifyContent: 'flex-end'
+    }
+  },
+  infoCard: {
+    border: `solid ${green[500]}`
+  },
+  warningCard: {
+    border: `solid ${yellow[500]}`
+  },
+  errorCard: {
+    border: `solid ${red[500]}`
   }
 });
 
 class Demo extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      count: 0
-    };
-  }
-
   showNotification = () => {
-    NotificationProvider.showNotification({
+    showNotification(id => ({
       title: 'Title',
-      subheader: `Some message to be displayed ${this.state.count}`,
+      subheader: `Some message to be displayed {id: ${id}}`,
       avatar: (
         <Avatar className={this.props.classes.avatar}>
           <Message />
         </Avatar>
       ),
       timeout: 2000
-    });
-    // update notifications count
-    this.setState({
-      count: this.state.count + 1
-    });
+    }));
   };
 
-  showPersonalisedNotification = () => {
-    // update notifications count
-    this.setState({
-      count: this.state.count + 1
-    });
-    NotificationProvider.showNotification({
+  showActionNotification = () => {
+    showNotification(id => ({
       title: 'Title',
-      subheader: `Some message to be displayed ${this.state.count}`,
-      avatar: <Avatar className={this.props.classes.avatar} src={AvatarImg} />,
-      timestamp: moment().format('HH:mm')
-    });
-  };
-
-  showPriorityNotification = () => {
-    // update notifications count
-    this.setState({
-      count: this.state.count + 1
-    });
-    NotificationProvider.showNotification({
-      title: 'Title',
-      subheader: `Some message to be displayed ${this.state.count}`,
+      subheader: `Some message to be displayed {id: ${id}}`,
       avatar: (
         <Avatar className={this.props.classes.avatar}>
-          <Call />
+          <Person />
         </Avatar>
       ),
       action: (
         <div>
-          <Button dense className={this.props.classes.button}>
+          <Button
+            dense
+            className={this.props.classes.button}
+            color="secondary"
+            onClick={() => removeNotification(id)}
+          >
             Dismiss <Close className={this.props.classes.rightIcon} />
           </Button>
-          <Button dense className={this.props.classes.button}>
+          <Button dense className={this.props.classes.button} color="primary">
+            Answer <Call className={this.props.classes.rightIcon} />
+          </Button>
+        </div>
+      )
+    }));
+  };
+
+  showPriorityNotification = () => {
+    showNotification(id => ({
+      title: 'Title',
+      subheader: `Priority message {id: ${id}}`,
+      content:
+        'Priority message will not discarded when new notifications arrive and max limit reached',
+      avatar: <Avatar className={this.props.classes.avatar} src={AvatarImg} />,
+      action: (
+        <div>
+          <Button
+            dense
+            className={this.props.classes.button}
+            color="secondary"
+            onClick={() => removeNotification(id)}
+          >
+            Dismiss <Close className={this.props.classes.rightIcon} />
+          </Button>
+          <Button dense className={this.props.classes.button} color="primary">
             Answer <Call className={this.props.classes.rightIcon} />
           </Button>
         </div>
       ),
+      disableTimestamp: true,
       priority: true
-    });
+    }));
   };
 
   render() {
@@ -160,13 +198,16 @@ class Demo extends Component {
         </AppBar>
         <Paper className={classes.sample}>
           <Grid container>
-            <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+            <Grid item xs={12} sm={6} md={4} lg={4} xl={4}>
+              <Typography color="inherit" type="headline" paragraph>
+                Standard Notifications
+              </Typography>
               <Notification
                 title="Title"
                 subheader="Some message"
                 avatar={
                   <Avatar>
-                    <Person />
+                    <Message />
                   </Avatar>
                 }
                 open={true}
@@ -179,7 +220,7 @@ class Demo extends Component {
                 subheader="Some message"
                 avatar={
                   <Avatar className={this.props.classes.avatar}>
-                    <Call />
+                    <Person />
                   </Avatar>
                 }
                 action={
@@ -196,25 +237,29 @@ class Demo extends Component {
                 onCloseNotification={() => {
                   return;
                 }}
+                disableTimestamp
               />
               <Notification
                 title="Title"
-                subheader="Some message"
-                disableTimestamp
+                subheader="With custom timestamp"
+                timestamp={moment().format('HH:mm:ss')}
                 open={true}
                 onCloseNotification={() => {
                   return;
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+            <Grid item xs={12} sm={6} md={4} lg={4} xl={4}>
+              <Typography color="inherit" type="headline" paragraph>
+                Notifications with additional text
+              </Typography>
               <Notification
                 title="Title"
                 subheader="Subheader"
                 content="Some message"
                 avatar={
                   <Avatar>
-                    <Person />
+                    <Message />
                   </Avatar>
                 }
                 open={true}
@@ -228,7 +273,7 @@ class Demo extends Component {
                 content="Some message"
                 avatar={
                   <Avatar className={this.props.classes.avatar}>
-                    <Call />
+                    <Person />
                   </Avatar>
                 }
                 action={
@@ -245,15 +290,156 @@ class Demo extends Component {
                 onCloseNotification={() => {
                   return;
                 }}
+                disableTimestamp
               />
               <Notification
                 title="Title"
                 subheader="Subheader"
-                content="Some message"
+                content="With custom timestamp"
                 open={true}
                 onCloseNotification={() => {
                   return;
                 }}
+                timestamp={moment().format('HH:mm:ss')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} lg={4} xl={4}>
+              <Typography color="inherit" type="headline" paragraph>
+                Expanded Notifications
+              </Typography>
+              <Notification
+                title="Title"
+                subheader="Some message"
+                avatar={
+                  <Avatar>
+                    <Message />
+                  </Avatar>
+                }
+                open={true}
+                onCloseNotification={() => {
+                  return;
+                }}
+                expandContent="Expanded content"
+              />
+              <Notification
+                title="Title"
+                subheader="Some message"
+                avatar={
+                  <Avatar className={this.props.classes.avatar}>
+                    <Person />
+                  </Avatar>
+                }
+                open={true}
+                onCloseNotification={() => {
+                  return;
+                }}
+                expandContent={
+                  <div className={classes.expandedButtonContainer}>
+                    <Divider />
+                    <div>
+                      <Button
+                        dense
+                        className={classes.expandedButton}
+                        color="secondary"
+                      >
+                        Dismiss <Close className={classes.rightIcon} />
+                      </Button>
+                      <Button
+                        dense
+                        className={classes.expandedButton}
+                        color="primary"
+                      >
+                        Answer <Call className={classes.rightIcon} />
+                      </Button>
+                    </div>
+                  </div>
+                }
+                disableTimestamp
+              />
+              <Notification
+                title="Title"
+                subheader="With custom timestamp"
+                open={true}
+                onCloseNotification={() => {
+                  return;
+                }}
+                expandContent="Expanded content"
+                timestamp={moment().format('HH:mm:ss')}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={4} xl={4}>
+              <Typography color="inherit" type="headline" paragraph>
+                Custom Notifications
+              </Typography>
+              <Notification
+                title="Info"
+                subheader="Some info message"
+                avatar={
+                  <Avatar className={this.props.classes.avatarInfo}>
+                    <InfoIcon />
+                  </Avatar>
+                }
+                action={
+                  <div>
+                    <Button dense className={classes.button} color="secondary">
+                      Dismiss <Close className={classes.rightIcon} />
+                    </Button>
+                  </div>
+                }
+                open={true}
+                onCloseNotification={() => {
+                  return;
+                }}
+                disableTimestamp
+                classes={{ card: classes.infoCard }}
+              />
+              <Notification
+                title="Warning"
+                subheader="Some warning message"
+                avatar={
+                  <Avatar className={this.props.classes.avatarWarning}>
+                    <WarningIcon />
+                  </Avatar>
+                }
+                action={
+                  <div>
+                    <Button dense className={classes.button} color="secondary">
+                      Dismiss <Close className={classes.rightIcon} />
+                    </Button>
+                  </div>
+                }
+                open={true}
+                onCloseNotification={() => {
+                  return;
+                }}
+                disableTimestamp
+                classes={{ card: classes.warningCard }}
+              />
+              <Notification
+                title="Error"
+                subheader="Some error message"
+                avatar={
+                  <Avatar className={this.props.classes.avatarError}>
+                    <ErrorIcon />
+                  </Avatar>
+                }
+                action={
+                  <div>
+                    <Button dense className={classes.button} color="secondary">
+                      Dismiss <Close className={classes.rightIcon} />
+                    </Button>
+                  </div>
+                }
+                open={true}
+                onCloseNotification={() => {
+                  return;
+                }}
+                disableTimestamp
+                classes={{ card: classes.errorCard }}
+                expandContent={
+                  <Typography>Some error detail, or stack trace</Typography>
+                }
               />
             </Grid>
           </Grid>
@@ -263,8 +449,8 @@ class Demo extends Component {
           <Button raised onClick={this.showNotification}>
             Show Notification
           </Button>
-          <Button raised onClick={this.showPersonalisedNotification}>
-            Show Personalised Notification
+          <Button raised onClick={this.showActionNotification}>
+            Show Action Notification
           </Button>
           <Button
             raised
