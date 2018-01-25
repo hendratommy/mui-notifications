@@ -104,7 +104,7 @@ const styles = theme => ({
 });
 
 class Demo extends Component {
-  showNotification = () => {
+  showBasicNotification = () => {
     showNotification(id => ({
       title: 'Title',
       subheader: `Some message to be displayed {id: ${id}}`,
@@ -446,8 +446,8 @@ class Demo extends Component {
         </Paper>
         <Divider className={classes.divider} />
         <div className={classes.buttonContainer}>
-          <Button raised onClick={this.showNotification}>
-            Show Notification
+          <Button raised onClick={this.showBasicNotification}>
+            Show Basic Notification
           </Button>
           <Button raised onClick={this.showActionNotification}>
             Show Action Notification
