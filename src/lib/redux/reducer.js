@@ -4,17 +4,19 @@ import { combineReducers } from 'redux';
 export const SHOW_NOTIFICATION = '@@mui-notifications/SHOW_NOTIFICATION';
 export const HIDE_NOTIFICATION = '@@mui-notifications/HIDE_NOTIFICATION';
 export const REMOVE_NOTIFICATION = '@@mui-notifications/REMOVE_NOTIFICATION';
+export const REMOVE_NOTIFICATION_BY_ID =
+  '@@mui-notifications/REMOVE_NOTIFICATION_BY_ID';
 export const SET_MAX_NOTIFICATIONS =
   '@@mui-notifications/SET_MAX_NOTIFICATIONS';
 
 const initialState = Map({
   notifications: List(),
   count: 0,
-  maxNotifications: 5
+  maxNotifications: 4
 });
 
 const reducer = (state = initialState, action) => {
-  let notifications, notification, count, maxNotifications, index;
+  let notifications, notification, count, maxNotifications, index, id;
   switch (action.type) {
     case SHOW_NOTIFICATION: {
       notifications = state.get('notifications');
@@ -63,6 +65,16 @@ const reducer = (state = initialState, action) => {
 
       index = action.payload.index;
       notifications = notifications.splice(index, 1);
+      return state.set('notifications', notifications);
+    }
+    case REMOVE_NOTIFICATION_BY_ID: {
+      notifications = state.get('notifications');
+
+      id = action.payload.id;
+      notifications = notifications.splice(
+        notifications.findIndex(n => n.id === id),
+        1
+      );
       return state.set('notifications', notifications);
     }
     default: {

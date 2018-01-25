@@ -1,5 +1,6 @@
 export { default as Notification } from './Notification';
 export {
   default as NotificationProvider,
-  showNotification
+  showNotification,
+  removeNotification
 } from './NotificationProvider';

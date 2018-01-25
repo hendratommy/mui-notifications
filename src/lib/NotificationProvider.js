@@ -10,6 +10,7 @@ import Notification from './Notification';
 import {
   SHOW_NOTIFICATION,
   REMOVE_NOTIFICATION,
+  REMOVE_NOTIFICATION_BY_ID,
   HIDE_NOTIFICATION,
   SET_MAX_NOTIFICATIONS
 } from './redux/reducer';
@@ -31,7 +32,7 @@ class NotificationProvider extends React.Component {
     setMaxNotifications(this.props.maxNotifications);
   }
   onCloseNotification = index => {
-    removeNotification(index);
+    internalRemoveNotification(index);
   };
 
   onNotificationTimeout = index => {
@@ -114,14 +115,26 @@ export const setMaxNotifications = maxNotifications => {
   });
 };
 
-export const showNotification = notification => {
-  return store.dispatch({ type: SHOW_NOTIFICATION, payload: { notification } });
+export const showNotification = getNotificationFn => {
+  const id = store.getState().muiNotifications.get('count');
+  return new Promise((resolve, reject) => {
+    const notification = getNotificationFn(id);
+    const dispatched = store.dispatch({
+      type: SHOW_NOTIFICATION,
+      payload: { notification }
+    });
+    return resolve(dispatched);
+  });
 };
 
 const hideNotification = index => {
   return store.dispatch({ type: HIDE_NOTIFICATION, payload: { index } });
 };
 
-export const removeNotification = index => {
+const internalRemoveNotification = index => {
   return store.dispatch({ type: REMOVE_NOTIFICATION, payload: { index } });
+};
+
+export const removeNotification = id => {
+  return store.dispatch({ type: REMOVE_NOTIFICATION_BY_ID, payload: { id } });
 };
