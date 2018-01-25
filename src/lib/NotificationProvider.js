@@ -136,5 +136,11 @@ const internalRemoveNotification = index => {
 };
 
 export const removeNotification = id => {
-  return store.dispatch({ type: REMOVE_NOTIFICATION_BY_ID, payload: { id } });
+  return new Promise((resolve, reject) => {
+    const dispacted = store.dispatch({
+      type: REMOVE_NOTIFICATION_BY_ID,
+      payload: { id }
+    });
+    return resolve(dispacted);
+  });
 };

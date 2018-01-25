@@ -3,10 +3,12 @@ import PropTypes from 'prop-types';
 import { withStyles } from 'material-ui/styles';
 import IconButton from 'material-ui/IconButton';
 import Card, { CardHeader, CardContent, CardActions } from 'material-ui/Card';
+import Collapse from 'material-ui/transitions/Collapse';
 import Slide from 'material-ui/transitions/Slide';
 import Typography from 'material-ui/Typography';
 import Divider from 'material-ui/Divider';
 import CloseIcon from 'material-ui-icons/Close';
+import ExpandMore from 'material-ui-icons/ExpandMore';
 import moment from 'moment';
 import classNames from 'classnames';
 
@@ -37,42 +39,46 @@ const styles = theme => ({
     height: 24
   },
   cardActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
     margin: 0,
-    padding: 0
+    padding: 0,
+    display: 'flex',
+    justifyContent: 'flex-end'
   },
   actionDivider: {
-    marginTop: theme.spacing.unit,
+    margin: `${theme.spacing.unit}px ${theme.spacing.unit}px 0px ${
+      theme.spacing.unit
+    }px`,
     padding: 0
   },
-  titleComponent: {
+  rightHeaderSection: {
     display: 'flex',
     justifyContent: 'flex-start',
     flexDirection: 'row',
-    maxWidth: 200,
-    alignItems: 'baseline',
+    alignItems: 'center',
+    marginTop: theme.spacing.unit,
     '& :last-child': {
-      marginLeft: 'auto'
+      marginRight: theme.spacing.unit
     }
   },
-  close: {
+  smallIcon: {
     width: 15,
     height: 15
   },
-  closeButton: {
+  smallIconButton: {
     width: 20,
     height: 20,
-    margin: theme.spacing.unit
+    marginLeft: theme.spacing.unit
   },
   timestampFont: {
-    width: 70,
     fontSize: '9pt',
     color: theme.palette.text.secondary,
-    textAlign: 'right'
+    textAlign: 'left'
   },
   titleText: {
     width: 158
+  },
+  expandTitleText: {
+    width: 133
   },
   subheaderText: {
     display: 'block',
@@ -80,10 +86,33 @@ const styles = theme => ({
     color: theme.palette.text.secondary,
     maxHeight: 60,
     overflow: 'hidden'
+  },
+  expand: {
+    transform: 'rotate(0deg)',
+    transition: theme.transitions.create('transform', {
+      duration: theme.transitions.duration.shortest
+    }),
+    textAlign: 'center'
+  },
+  expandContent: {
+    margin: 0,
+    padding: theme.spacing.unit
+  },
+  secondaryTextColor: {
+    color: theme.palette.text.secondary
+  },
+  expandOpen: {
+    transform: 'rotate(180deg)'
   }
 });
 
-class Notification extends React.PureComponent {
+class Notification extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      expanded: false
+    };
+  }
   componentWillMount() {
     if (this.props.timeout) {
       this.autoHideTimeout = setTimeout(() => {
@@ -109,6 +138,10 @@ class Notification extends React.PureComponent {
     }
   };
 
+  handleExpandContent = () => {
+    this.setState({ expanded: !this.state.expanded });
+  };
+
   render() {
     const {
       classes,
@@ -121,7 +154,8 @@ class Notification extends React.PureComponent {
       disableTimestamp,
       timestamp,
       open,
-      hideCloseButton
+      hideCloseButton,
+      expandContent
     } = this.props;
 
     return (
@@ -134,25 +168,22 @@ class Notification extends React.PureComponent {
             className={classes.cardHeader}
             avatar={avatar}
             action={
-              !hideCloseButton && (
-                <IconButton
-                  className={classes.closeButton}
-                  onClick={this.onCloseNotification}
-                >
-                  <CloseIcon className={classes.close} />
-                </IconButton>
-              )
-            }
-            title={
-              <span className={classes.titleComponent}>
-                <Typography
-                  type={avatar ? 'body2' : 'headline'}
-                  component="span"
-                  className={classes.titleText}
-                  noWrap
-                >
-                  {title}
-                </Typography>
+              <span className={classes.rightHeaderSection}>
+                {expandContent ? (
+                  <IconButton
+                    className={classes.smallIconButton}
+                    onClick={this.handleExpandContent}
+                    disableRipple
+                  >
+                    <ExpandMore
+                      className={classNames(classes.expand, classes.smallIcon, {
+                        [classes.expandOpen]: this.state.expanded
+                      })}
+                    />
+                  </IconButton>
+                ) : (
+                  <span />
+                )}
                 {disableTimestamp ? (
                   <span />
                 ) : (
@@ -164,7 +195,27 @@ class Notification extends React.PureComponent {
                     {timestamp ? timestamp : moment().format('h:mm A')}
                   </Typography>
                 )}
+                {!hideCloseButton && (
+                  <IconButton
+                    className={classes.smallIconButton}
+                    onClick={this.onCloseNotification}
+                  >
+                    <CloseIcon className={classes.smallIcon} />
+                  </IconButton>
+                )}
               </span>
+            }
+            title={
+              <Typography
+                type={avatar ? 'body2' : 'headline'}
+                component="span"
+                className={
+                  expandContent ? classes.expandTitleText : classes.titleText
+                }
+                noWrap
+              >
+                {title}
+              </Typography>
             }
             subheader={
               <Typography
@@ -178,16 +229,27 @@ class Notification extends React.PureComponent {
           />
           {content && (
             <CardContent className={classes.cardContent}>
-              <Typography type="body1" noWrap>
+              <Typography type="body1" component="span">
                 {content}
               </Typography>
             </CardContent>
+          )}
+          {expandContent && (
+            <Collapse in={this.state.expanded} unmountOnExit>
+              <Typography
+                type="body1"
+                component="span"
+                className={classes.expandContent}
+                classes={{ body1: classes.secondaryTextColor }}
+              >
+                {expandContent}
+              </Typography>
+            </Collapse>
           )}
           {action && (
             <div>
               <Divider className={classes.actionDivider} />
               <CardActions className={classes.cardActions}>
-                <Divider />
                 {action}
               </CardActions>
             </div>
@@ -212,8 +274,10 @@ Notification.propTypes = {
   onCloseNotification: PropTypes.func.isRequired,
   onNotificationTimeout: PropTypes.func,
   open: PropTypes.bool.isRequired,
+  id: PropTypes.any,
   hideCloseButton: PropTypes.bool,
-  priority: PropTypes.bool
+  priority: PropTypes.bool,
+  expandContent: PropTypes.oneOfType([PropTypes.string, PropTypes.node])
 };
 Notification.defaultProps = {
   raised: true,
