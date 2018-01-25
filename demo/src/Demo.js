@@ -93,13 +93,13 @@ const styles = theme => ({
     }
   },
   infoCard: {
-    border: `solid ${green[500]}`
+    border: `solid 1px ${green[500]}`
   },
   warningCard: {
-    border: `solid ${yellow[500]}`
+    border: `solid 1px ${yellow[500]}`
   },
   errorCard: {
-    border: `solid ${red[500]}`
+    border: `solid 1px ${red[500]}`
   }
 });
 
@@ -392,6 +392,7 @@ class Demo extends Component {
                   return;
                 }}
                 disableTimestamp
+                hideCloseButton
                 classes={{ card: classes.infoCard }}
               />
               <Notification
@@ -414,6 +415,7 @@ class Demo extends Component {
                   return;
                 }}
                 disableTimestamp
+                hideCloseButton
                 classes={{ card: classes.warningCard }}
               />
               <Notification
@@ -436,6 +438,7 @@ class Demo extends Component {
                   return;
                 }}
                 disableTimestamp
+                hideCloseButton
                 classes={{ card: classes.errorCard }}
                 expandContent={
                   <Typography>Some error detail, or stack trace</Typography>

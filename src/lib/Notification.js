@@ -199,6 +199,7 @@ class Notification extends React.Component {
                   <IconButton
                     className={classes.smallIconButton}
                     onClick={this.onCloseNotification}
+                    disableRipple
                   >
                     <CloseIcon className={classes.smallIcon} />
                   </IconButton>
